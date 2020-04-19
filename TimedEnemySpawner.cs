@@ -4,59 +4,67 @@ using UnityEngine.Events;
 
 public class TimedEnemySpawner : MonoBehaviour
 {
-    [Tooltip("How far into the game this spawner should activate")]
-    [SerializeField] private float _startAtSeconds;
-    [Tooltip("How far into the game this spawner should de-activate (should be higher than start)")]
-    [SerializeField] private float _stopAtSeconds = 9999;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.Events;
 
-    [Tooltip("How often in seconds the thing spawns")]
-    [SerializeField] private float _spawnRate = 5f;
+public class TimedEnemySpawner : MonoBehaviour
+{
+    public float spawnRate;
+    public float maxTime;
+    [SerializeField]private float distanceDelay;
+    public GameObject enemyPrefab;
 
-    [SerializeField] private float SpawnTimer = 0f;
+    private float time;
+    private bool spawn;
+    private float rate;
+    [SerializeField]private int minEnemies;
+    [SerializeField]private int maxEnemies;
 
-    [SerializeField] private GameObject _enemyPrefab;
-
-    [SerializeField]private int minEnemiesToSpawn = 3;
-    [SerializeField]private int maxEnemiesToSpawn = 10;
-
-
-
-    private float _timeSinceLevelStarted;
-    private float _spawnTimer;
-
-    private void OnEnable()
+    void Start()
     {
-        _spawnTimer = 0f;
-        _timeSinceLevelStarted = 0f;        
-    }
-
-
-    private void Update()
-    {
-        _timeSinceLevelStarted += Time.deltaTime;
-
-        if (_timeSinceLevelStarted >= _startAtSeconds && _timeSinceLevelStarted <= _stopAtSeconds)
-            TickSpawning();
-    }
-
-    private void TickSpawning()
-    {
-        _spawnTimer += Time.deltaTime;
-        if (_spawnTimer >= _spawnRate)
-            Spawn();
-    }
-
-    public void Spawn()
-     {
-        _spawnTimer = 0f;
-
-        int numberOfEnemiesToSpawn = UnityEngine.Random.Range(minEnemiesToSpawn, maxEnemiesToSpawn);
-        for (int i = 0; i < numberOfEnemiesToSpawn; i++)
-       {
-            Instantiate(_enemyPrefab, transform.position, Quaternion.identity);
+        spawn = true;
+        distanceDelay = Random.Range(5, 8);
             
+    }
 
-       }
+    void Update()
+    {
+        //time += Time.deltaTime;
+        //if (time >= maxTime)
+        //{
+            //StopAllCoroutines();
+            //enabled = false;
+           // return;
+        //}
 
-   }
+        if (spawn)
+        {
+            rate += Time.deltaTime;
+            if (rate >= spawnRate)
+            {
+                spawn = false;
+                rate = 0f;
+                StartCoroutine(Spawn(Random.Range(minEnemies, maxEnemies + 1)));
+            }
+        }
+    }
+
+    IEnumerator Spawn(int amount)
+    {
+        if (amount == 1)
+        {
+            Instantiate(enemyPrefab, transform.position, Quaternion.identity);
+            spawn = true;
+            yield break;
+        }
+
+        for (int i = 0; i < amount; i++)
+        {
+            Instantiate(enemyPrefab, transform.position, Quaternion.identity);
+            yield return new WaitForSeconds(distanceDelay);
+        }
+
+        spawn = true;
+    }
 }
